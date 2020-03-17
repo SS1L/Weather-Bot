@@ -1,7 +1,8 @@
 import telepot
 import telebot
 import requests
-import urllib, json  
+import urllib, json
+import pyowm  
 
 
 token = '1065167897:AAFqQSsIOsMlNbRvvgZyzsAPdVGXi6CPWYM'
@@ -17,17 +18,20 @@ def start_message(message):
 def help_message(message):
     bot.send_message(message.chat.id, 'Send me \'your city\' and I find a weather')
 
-@bot.message_handler(content_types=['text'])
-def chip(message):
-    '''
-    first_city = message.text.split()[0]
-    second_city = message.text.split()[1]
-    a = next(item for item in data if item['name'] == first_city)
-    b = next(item for item in data if item['name'] == second_city)
-    if len(message.split()) == 3:
-        bot.send_message(message.chat.id, 'Nice')
-    else:
-        bot.send_message(message.chat.id, 'Noob')
-    '''    
+@bot.message_handler(commands=["weather"])
+def weather(message):
+    city = bot.send_message(message.chat.id, "In which city do you show the weather?")
+    bot.register_next_step_handler(city, weath)
 
-bot.polling()
+def weath(message):
+    owm = pyowm.OWM("a8bb95e658fdd84e0880066535b17743")
+    city = message.text
+    weather = owm.weather_at_place(city)
+    w = weather.get_weather()
+    temperature = w.get_temperature("celsius")["temp"]
+    bot.send_message(message.chat.id, "Now in the " + str(city) +  
+                     ", temperature - " + str(temperature)+ ' \N{DEGREE SIGN}C')
+
+
+if __name__ == "__main__":
+    bot.polling(none_stop=True)
